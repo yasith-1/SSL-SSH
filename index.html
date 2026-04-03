@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSL vs SSH — සිංහල Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+Sinhala:wght@300;400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ssl-color: #00C2FF;
+    --ssh-color: #00FFB2;
+    --bg: #0A0E1A;
+    --bg2: #111827;
+    --bg3: #1a2235;
+    --border: rgba(255,255,255,0.07);
+    --text: #E8EDF5;
+    --muted: #7A8BA0;
+    --font-si: 'Noto Sans Sinhala', sans-serif;
+    --font-code: 'Fira Code', monospace;
+    --font-mono: 'Space Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-si);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    padding: 80px 40px 60px;
+    text-align: center;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 20% 50%, rgba(0,194,255,0.12) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 50% at 80% 50%, rgba(0,255,178,0.10) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-label {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    border: 1px solid var(--border);
+    padding: 6px 16px;
+    border-radius: 20px;
+    margin-bottom: 28px;
+  }
+
+  .hero h1 {
+    font-family: var(--font-mono);
+    font-size: clamp(32px, 6vw, 64px);
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 20px;
+  }
+
+  .hero h1 .ssl { color: var(--ssl-color); }
+  .hero h1 .ssh { color: var(--ssh-color); }
+  .hero h1 .vs  { color: var(--muted); margin: 0 16px; }
+
+  .hero-sub {
+    font-size: 16px;
+    color: var(--muted);
+    max-width: 540px;
+    margin: 0 auto 40px;
+    line-height: 1.8;
+  }
+
+  .hero-pills {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .pill {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 8px 20px;
+    border-radius: 24px;
+    border: 1px solid;
+    letter-spacing: 0.05em;
+  }
+  .pill-ssl { border-color: var(--ssl-color); color: var(--ssl-color); background: rgba(0,194,255,0.08); }
+  .pill-ssh { border-color: var(--ssh-color); color: var(--ssh-color); background: rgba(0,255,178,0.08); }
+
+  /* ── NAV TABS ── */
+  .nav {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .nav-btn {
+    flex: 1;
+    padding: 16px 10px;
+    font-family: var(--font-si);
+    font-size: 14px;
+    color: var(--muted);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+  }
+
+  .nav-btn:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+  .nav-btn.active-ssl { color: var(--ssl-color); border-bottom-color: var(--ssl-color); }
+  .nav-btn.active-ssh { color: var(--ssh-color); border-bottom-color: var(--ssh-color); }
+  .nav-btn.active-cmp { color: #c084fc; border-bottom-color: #c084fc; }
+
+  /* ── MAIN CONTENT ── */
+  .container { max-width: 960px; margin: 0 auto; padding: 48px 32px; }
+
+  .panel { display: none; animation: fadeIn 0.3s ease; }
+  .panel.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 36px;
+  }
+
+  .section-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .icon-ssl { background: rgba(0,194,255,0.15); color: var(--ssl-color); border: 1px solid rgba(0,194,255,0.3); }
+  .icon-ssh { background: rgba(0,255,178,0.12); color: var(--ssh-color); border: 1px solid rgba(0,255,178,0.25); }
+
+  .section-header h2 { font-family: var(--font-mono); font-size: 22px; font-weight: 700; }
+  .section-header p { font-size: 14px; color: var(--muted); margin-top: 4px; line-height: 1.6; }
+
+  /* ── INFO CARDS ── */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px 28px;
+    margin-bottom: 24px;
+  }
+
+  .card-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dot-ssl { background: var(--ssl-color); }
+  .dot-ssh { background: var(--ssh-color); }
+  .dot-purple { background: #c084fc; }
+
+  .card p { font-size: 15px; color: var(--muted); line-height: 1.9; }
+  .card p strong { color: var(--text); font-weight: 600; }
+
+  /* ── FLOW DIAGRAM ── */
+  .flow-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 24px;
+  }
+
+  .flow-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    row-gap: 12px;
+  }
+  .flow-row:last-child { margin-bottom: 0; }
+
+  .flow-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    margin-bottom: 16px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .fnode {
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .fnode-blue { background: rgba(0,194,255,0.1); color: var(--ssl-color); border: 1px solid rgba(0,194,255,0.3); }
+  .fnode-green { background: rgba(0,255,178,0.1); color: var(--ssh-color); border: 1px solid rgba(0,255,178,0.25); }
+  .fnode-red { background: rgba(255,80,80,0.1); color: #ff6b6b; border: 1px solid rgba(255,80,80,0.3); }
+  .fnode-gray { background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid var(--border); }
+
+  .farrow {
+    flex: 1;
+    min-width: 30px;
+    position: relative;
+    height: 2px;
+    margin: 0 4px;
+  }
+  .farrow-line { height: 2px; width: 100%; }
+  .farrow::after {
+    content: '';
+    position: absolute;
+    right: -1px; top: -4px;
+    border: 5px solid transparent;
+  }
+  .farrow-plain .farrow-line { background: rgba(255,80,80,0.5); }
+  .farrow-plain::after { border-left-color: rgba(255,80,80,0.5); }
+  .farrow-enc .farrow-line { background: var(--ssh-color); }
+  .farrow-enc::after { border-left-color: var(--ssh-color); }
+  .farrow-ssl .farrow-line { background: var(--ssl-color); }
+  .farrow-ssl::after { border-left-color: var(--ssl-color); }
+
+  .packet {
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-family: var(--font-code);
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .packet-danger { background: rgba(255,80,80,0.15); color: #ff8080; border: 1px solid rgba(255,80,80,0.3); }
+  .packet-safe { background: rgba(0,255,178,0.12); color: var(--ssh-color); border: 1px solid rgba(0,255,178,0.3); }
+
+  .flow-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    margin-bottom: 12px;
+  }
+  .badge-danger { background: rgba(255,80,80,0.1); color: #ff8080; border: 1px solid rgba(255,80,80,0.2); }
+  .badge-safe { background: rgba(0,255,178,0.1); color: var(--ssh-color); border: 1px solid rgba(0,255,178,0.2); }
+
+  /* ── CODE BLOCKS ── */
+  .code-card {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+  }
+
+  .code-dots { display: flex; gap: 6px; }
+  .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .code-dot:nth-child(1) { background: #ff5f56; }
+  .code-dot:nth-child(2) { background: #ffbd2e; }
+  .code-dot:nth-child(3) { background: #27c93f; }
+
+  .code-lang {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  pre {
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: var(--font-code);
+    font-size: 13px;
+    line-height: 1.9;
+  }
+
+  .c-comment { color: #4a5568; font-style: italic; }
+  .c-key { color: #7dd3fc; }
+  .c-val { color: #86efac; }
+  .c-str { color: #fca5a5; }
+  .c-kw  { color: #c084fc; }
+  .c-fn  { color: #fde68a; }
+  .c-num { color: #fb923c; }
+
+  /* ── ANALOGY GRID ── */
+  .analogy-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .analogy-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+
+  .analogy-icon { font-size: 28px; margin-bottom: 12px; display: block; }
+  .analogy-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+  .analogy-card p { font-size: 13px; color: var(--muted); line-height: 1.8; }
+  .analogy-card.danger { border-color: rgba(255,80,80,0.2); }
+  .analogy-card.safe-ssl { border-color: rgba(0,194,255,0.2); }
+  .analogy-card.safe-ssh { border-color: rgba(0,255,178,0.2); }
+
+  /* ── USE CASES ── */
+  .use-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .use-item {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 13px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    line-height: 1.6;
+  }
+  .use-item .check { flex-shrink: 0; font-size: 14px; margin-top: 1px; }
+
+  /* ── COMPARE TABLE ── */
+  .compare-wrap {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: rgba(255,255,255,0.03); }
+  thead th {
+    padding: 16px 20px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  thead th:nth-child(2) { color: var(--ssl-color); }
+  thead th:nth-child(3) { color: var(--ssh-color); }
+  thead th:first-child { color: var(--muted); }
+
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  tbody td { padding: 14px 20px; font-size: 14px; line-height: 1.6; }
+  tbody td:first-child { color: var(--muted); font-size: 13px; font-weight: 600; }
+
+  .badge-port {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .port-ssl { background: rgba(0,194,255,0.12); color: var(--ssl-color); border: 1px solid rgba(0,194,255,0.3); }
+  .port-ssh { background: rgba(0,255,178,0.1); color: var(--ssh-color); border: 1px solid rgba(0,255,178,0.25); }
+
+  /* ── TWO COLUMN QUICK REF ── */
+  .quick-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 24px;
+  }
+
+  .quick-card {
+    border-radius: 14px;
+    padding: 22px 24px;
+  }
+  .quick-ssl { background: rgba(0,194,255,0.06); border: 1px solid rgba(0,194,255,0.2); }
+  .quick-ssh { background: rgba(0,255,178,0.05); border: 1px solid rgba(0,255,178,0.18); }
+
+  .quick-card h4 { font-family: var(--font-mono); font-size: 13px; font-weight: 700; margin-bottom: 14px; }
+  .quick-ssl h4 { color: var(--ssl-color); }
+  .quick-ssh h4 { color: var(--ssh-color); }
+
+  .quick-card ul { list-style: none; }
+  .quick-card li { font-size: 13px; color: var(--muted); padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; align-items: center; gap: 8px; }
+  .quick-card li:last-child { border-bottom: none; }
+  .quick-card li::before { content: '▸'; font-size: 10px; flex-shrink: 0; }
+  .quick-ssl li::before { color: var(--ssl-color); }
+  .quick-ssh li::before { color: var(--ssh-color); }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 32px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 640px) {
+    .hero { padding: 50px 20px 40px; }
+    .container { padding: 32px 20px; }
+    .analogy-grid, .quick-grid { grid-template-columns: 1fr; }
+    .flow-row { flex-direction: column; align-items: flex-start; }
+    .farrow { display: none; }
+    thead th, tbody td { padding: 10px 12px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-label">Software Engineering · Security Concepts</div>
+  <h1>
+    <span class="ssl">SSL</span>
+    <span class="vs">vs</span>
+    <span class="ssh">SSH</span>
+  </h1>
+  <p class="hero-sub">Web Security ගැන ලේසියෙන් තේරුම් ගන්න — Sinhala explanations + real code samples</p>
+  <div class="hero-pills">
+    <span class="pill pill-ssl">🔒 HTTPS Encryption</span>
+    <span class="pill pill-ssh">🔑 Remote Server Access</span>
+    <span class="pill pill-ssl">Port 443</span>
+    <span class="pill pill-ssh">Port 22</span>
+  </div>
+</section>
+
+<nav class="nav">
+  <button class="nav-btn active-ssl" onclick="show('ssl', this, 'active-ssl')">🔒 SSL / TLS</button>
+  <button class="nav-btn" onclick="show('ssh', this, 'active-ssh')">🔑 SSH</button>
+  <button class="nav-btn" onclick="show('cmp', this, 'active-cmp')">⚖️ සංසන්දනය</button>
+</nav>
+
+<div id="panel-ssl" class="panel active">
+<div class="container">
+
+  <div class="section-header">
+    <div class="section-icon icon-ssl">SSL</div>
+    <div>
+      <h2 style="color: var(--ssl-color);">SSL / TLS කියන්නේ මොකක්ද?</h2>
+      <p>Web browser එකක් සහ Web server එකක් අතර data ආරක්ෂිතව යැවීම</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot dot-ssl"></span> නිර්වචනය</div>
+    <p>
+      <strong>SSL (Secure Sockets Layer)</strong> — දැන් ගොඩක් වෙලාවට <strong>TLS (Transport Layer Security)</strong> ලෙස හඳුන්වනු ලබයි. 
+      මේක HTTP connection එකට security layer එකක් add කරලා <strong>HTTPS</strong> බවට පත් කරනවා. 
+      Browser address bar එකේ <strong>🔒 padlock</strong> icon එක දකිනවා නේද? ඒක SSL/TLS ක්‍රියාත්මක බවේ සලකුණ.
+    </p>
+  </div>
+
+  <div class="flow-card">
+    <div class="card-title"><span class="dot dot-ssl"></span> Data Flow — Plain HTTP vs HTTPS</div>
+
+    <div style="margin-bottom: 24px;">
+      <div class="flow-badge badge-danger">❌ SSL නැතිව — Plain HTTP</div>
+      <div class="flow-row">
+        <div class="fnode fnode-blue">Browser</div>
+        <div class="farrow farrow-plain"><div class="farrow-line"></div></div>
+        <div class="packet packet-danger">card: 4111-1111 visible!</div>
+        <div class="farrow farrow-plain"><div class="farrow-line"></div></div>
+        <div class="fnode fnode-red">😈 Hacker</div>
+        <div class="farrow farrow-plain"><div class="farrow-line"></div></div>
+        <div class="fnode fnode-gray">Server</div>
+      </div>
+      <p style="font-size: 13px; color: #ff8080; margin-top: 6px;">⚠ Hacker ට data plain text විදිහට කියවන්න පුළුවන් — <em>Man-in-the-middle attack</em></p>
+    </div>
+
+    <div>
+      <div class="flow-badge badge-safe">✅ SSL ඇතිව — HTTPS</div>
+      <div class="flow-row">
+        <div class="fnode fnode-blue">Browser</div>
+        <div class="farrow farrow-ssl"><div class="farrow-line"></div></div>
+        <div class="packet packet-safe">🔒 x9$kP#mQ2z...</div>
+        <div class="farrow farrow-ssl"><div class="farrow-line"></div></div>
+        <div class="fnode fnode-red">😈 Hacker — කියවන්න බෑ</div>
+        <div class="farrow farrow-enc"><div class="farrow-line"></div></div>
+        <div class="fnode fnode-green">Server 🔑</div>
+      </div>
+      <p style="font-size: 13px; color: var(--ssh-color); margin-top: 6px;">✅ Encrypted data. Key එක server ගාව විතරක් — hacker ට decrypt කරන්න බෑ.</p>
+    </div>
+  </div>
+
+  <div class="analogy-grid">
+    <div class="analogy-card danger">
+      <span class="analogy-icon">📮</span>
+      <h4 style="color: #ff8080;">SSL නැතිව</h4>
+      <p>Postcard එකක credit card details ලිවීම වගේ. ලියුම් කාරයාට, delivery කරන කෙනාට, පාරේ ඕනෑ කෙනෙකුට කියවන්න පුළුවන්.</p>
+    </div>
+    <div class="analogy-card safe-ssl">
+      <span class="analogy-icon">🔐</span>
+      <h4 style="color: var(--ssl-color);">SSL ඇතිව</h4>
+      <p>Details ටික යකඩ පෙට්ටියක දාලා යවනවා වගේ. යතුර තියෙන්නේ server ගාව විතරක් — කවුරු ගත්තත් ඇරලා බලන්න බෑ.</p>
+    </div>
+  </div>
+
+  <div class="card" style="border-color: rgba(0,194,255,0.2); margin-top: 24px;">
+    <div class="card-title"><span class="dot dot-ssl"></span> තවත් වැදගත් කරුණු</div>
+    <p>
+      <strong>Let's Encrypt (Free SSL):</strong> ඉස්සර SSL Certificates මුදල් දී ලබාගැනීමට සිදු වුවත්, දැන් ලෝකයේ බොහොමයක් websites වලට (Spring Boot / Next.js backend වලටත්) නොමිලේම SSL ලබා දෙන්නේ Let's Encrypt හරහාය.<br><br>
+      <strong>SSL Handshake:</strong> Browser එකයි Server එකයි data යවන්න කලින් "අපි කොහොමද මේක encrypt කරන්නේ?" කියලා කතා කරගන්න මූලික ක්‍රියාවලියට SSL Handshake එක යැයි කියනු ලැබේ.
+    </p>
+  </div>
+
+  <div class="code-card">
+    <div class="code-header">
+      <div class="code-dots"><div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div></div>
+      <span class="code-lang">SPRING BOOT — application.properties</span>
+    </div>
+    <pre><span class="c-comment"># Spring Boot SSL Configuration</span>
+<span class="c-key">server.port</span>=<span class="c-num">8443</span>
+<span class="c-key">server.ssl.enabled</span>=<span class="c-val">true</span>
+<span class="c-key">server.ssl.key-store</span>=<span class="c-str">classpath:keystore.p12</span>
+<span class="c-key">server.ssl.key-store-password</span>=<span class="c-str">your_secure_password</span>
+<span class="c-key">server.ssl.key-store-type</span>=<span class="c-str">PKCS12</span>
+<span class="c-key">server.ssl.key-alias</span>=<span class="c-str">hotelapp</span>
+
+<span class="c-comment"># HTTP → HTTPS Redirect</span>
+<span class="c-key">server.ssl.redirect-from-http</span>=<span class="c-val">true</span></pre>
+  </div>
+
+  <div class="code-card">
+    <div class="code-header">
+      <div class="code-dots"><div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div></div>
+      <span class="code-lang">REACT — HTTPS API Call</span>
+    </div>
+    <pre><span class="c-comment">// Hotel POS System — Checkout payment</span>
+<span class="c-kw">const</span> <span class="c-fn">handleCheckout</span> = <span class="c-kw">async</span> () => {
+  <span class="c-kw">const</span> response = <span class="c-kw">await</span> <span class="c-fn">fetch</span>(
+    <span class="c-str">"https://hotel.lk:8443/api/checkout"</span>,  <span class="c-comment">// ← https:// !</span>
+    {
+      method: <span class="c-str">"POST"</span>,
+      headers: { <span class="c-str">"Content-Type"</span>: <span class="c-str">"application/json"</span> },
+      body: JSON.<span class="c-fn">stringify</span>({
+        cardNumber: <span class="c-str">"4111-1111-1111-1111"</span>,  <span class="c-comment">// encrypted!</span>
+        amount: <span class="c-num">15000</span>,
+        currency: <span class="c-str">"LKR"</span>
+      })
+    }
+  );
+  <span class="c-comment">// Data encrypt වෙලා යනවා — SSL/TLS handles it automatically</span>
+  <span class="c-kw">const</span> result = <span class="c-kw">await</span> response.<span class="c-fn">json</span>();
+};</pre>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot dot-ssl"></span> SSL Use කරන තැන්</div>
+    <div class="use-grid">
+      <div class="use-item"><span class="check" style="color:var(--ssl-color);">✓</span>Bank / Payment websites</div>
+      <div class="use-item"><span class="check" style="color:var(--ssl-color);">✓</span>Login forms (passwords)</div>
+      <div class="use-item"><span class="check" style="color:var(--ssl-color);">✓</span>REST APIs (Spring Boot, Django)</div>
+      <div class="use-item"><span class="check" style="color:var(--ssl-color);">✓</span>React / Vue frontend calls</div>
+      <div class="use-item"><span class="check" style="color:var(--ssl-color);">✓</span>Mobile app backends</div>
+      <div class="use-item"><span class="check" style="color:var(--ssl-color);">✓</span>E-commerce checkout</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div id="panel-ssh" class="panel">
+<div class="container">
+
+  <div class="section-header">
+    <div class="section-icon icon-ssh">SSH</div>
+    <div>
+      <h2 style="color: var(--ssh-color);">SSH කියන්නේ මොකක්ද?</h2>
+      <p>Remote server එකකට internet හරහා ආරක්ෂිතව connect වී control කිරීම</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot dot-ssh"></span> නිර්වචනය</div>
+    <p>
+      <strong>SSH (Secure Shell)</strong> — එක computer එකක ඉඳන් තවත් computer එකක (ගොඩක් වෙලාවට remote server) 
+      <strong>terminal access</strong> ලබා ගන්න use කරන protocol එකක්. ඔයාගේ keyboard commands 
+      <strong>encrypted tunnel</strong> එකක් හරහා server එකේ run වෙනවා. AWS, DigitalOcean, GitHub — 
+      සෑම තැනකම SSH use කරනවා.
+    </p>
+  </div>
+
+  <div class="flow-card">
+    <div class="card-title"><span class="dot dot-ssh"></span> SSH Encrypted Tunnel</div>
+    <div class="flow-row">
+      <div class="fnode fnode-blue">ඔයාගේ PC<br><span style="font-size:10px;font-weight:400;opacity:0.7;">Local Terminal</span></div>
+      <div class="farrow farrow-enc" style="min-width: 60px;">
+        <div class="farrow-line"></div>
+      </div>
+      <div class="fnode fnode-gray" style="font-size: 12px;">🔒 Encrypted<br>Tunnel</div>
+      <div class="farrow farrow-enc" style="min-width: 60px;">
+        <div class="farrow-line"></div>
+      </div>
+      <div class="fnode fnode-green">Cloud Server<br><span style="font-size:10px;font-weight:400;opacity:0.7;">AWS / VPS</span></div>
+    </div>
+    <p style="font-size: 13px; color: var(--muted); margin-top: 12px;">
+      Type කරන <strong style="color:var(--ssh-color);">ඕනෑම command</strong> encrypt වෙලා tunnel දිගේ ගිහින් server එකේ run වෙනවා. 
+      Hacker ලාට tunnel එක ඇතුළේ යන දේවල් පේන්නේ නෑ.
+    </p>
+  </div>
+
+  <div class="analogy-grid">
+    <div class="analogy-card danger">
+      <span class="analogy-icon">🌐</span>
+      <h4 style="color: #ff8080;">SSH නැතිව</h4>
+      <p>Server password එක plain text විදිහට internet එක හරහා යනවා. Hacker ලාට ලේසියෙන් steal කරලා server hijack කරන්න පුළුවන්.</p>
+    </div>
+    <div class="analogy-card safe-ssh">
+      <span class="analogy-icon">🚇</span>
+      <h4 style="color: var(--ssh-color);">SSH ඇතිව</h4>
+      <p>රහස් underground tunnel. ඔයා type කරන commands කෙලින්ම ගිහින් server එකේ run වෙනවා. පිටින් ඉන්න කිසිම කෙනෙකුට ඒක පේන්නේ නෑ.</p>
+    </div>
+  </div>
+
+  <div class="card" style="border-color: rgba(0,255,178,0.2); margin-top: 24px;">
+    <div class="card-title"><span class="dot dot-ssh"></span> තවත් වැදගත් කරුණු</div>
+    <p>
+      <strong>SSH Port Forwarding (Tunneling):</strong> Remote Server එකක පිටින් access කරන්න බැරි Database එකකට (උදා: MySQL port 3306) අපේ local මැෂින් එකේ ඉඳන් ආරක්ෂිතව connect වෙන්න SSH Tunneling භාවිතා කළ හැක. මේක developer කෙනෙක්ට තියෙන ලොකුම super-power එකක්.<br><br>
+      <strong>File Transfer (SCP/SFTP):</strong> SSH මගින් terminal commands පමණක් නොව, <code>scp</code> හෝ <code>sftp</code> භාවිතා කර ආරක්ෂිතව server එකට files යැවීමද (උදා: build කළ React/Next.js folder එකක්) සිදු කළ හැක.
+    </p>
+  </div>
+
+  <div class="code-card">
+    <div class="code-header">
+      <div class="code-dots"><div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div></div>
+      <span class="code-lang">TERMINAL — SSH Connect</span>
+    </div>
+    <pre><span class="c-comment"># 1. Password method — server connect</span>
+$ <span class="c-fn">ssh</span> <span class="c-val">ubuntu</span>@<span class="c-str">203.0.113.10</span>
+<span class="c-comment"># → password: ************ (encrypted over network)</span>
+
+<span class="c-comment"># ─────────────────────────────────────────────────────
+# 2. SSH Key Pair Generate කිරීම (ආරක්ෂිතම ක්‍රමය)</span>
+$ <span class="c-fn">ssh-keygen</span> -t rsa -b <span class="c-num">4096</span> -C <span class="c-str">"dev@mycompany.lk"</span>
+<span class="c-comment"># → ~/.ssh/id_rsa      (Private Key — කිසිදා share කරන්නේ නෑ!)</span>
+<span class="c-comment"># → ~/.ssh/id_rsa.pub  (Public Key  — server / GitHub ට දෙනවා)</span>
+
+<span class="c-comment"># 3. Key use කර connect</span>
+$ <span class="c-fn">ssh</span> -i ~/.ssh/id_rsa <span class="c-val">ubuntu</span>@<span class="c-str">203.0.113.10</span>
+<span class="c-comment"># → Password typed කරන්නේ නෑ! Key authentication.</span></pre>
+  </div>
+
+  <div class="code-card">
+    <div class="code-header">
+      <div class="code-dots"><div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div></div>
+      <span class="code-lang">TERMINAL — Docker Deploy via SSH</span>
+    </div>
+    <pre><span class="c-comment"># Server connect වූ පසු — Deploy workflow</span>
+ubuntu@server:~$ <span class="c-fn">docker</span> pull <span class="c-val">myapp:latest</span>
+ubuntu@server:~$ <span class="c-fn">docker</span> stop myapp-container
+ubuntu@server:~$ <span class="c-fn">docker</span> run -d \
+    --name myapp-container \
+    -p <span class="c-num">8080</span>:<span class="c-num">8080</span> \
+    -e SPRING_PROFILES_ACTIVE=<span class="c-str">prod</span> \
+    <span class="c-val">myapp:latest</span>
+
+ubuntu@server:~$ <span class="c-fn">sudo</span> systemctl restart nginx
+<span class="c-comment"># ✅ Deploy done — SSH tunnel හරහා safely</span></pre>
+  </div>
+
+  <div class="code-card">
+    <div class="code-header">
+      <div class="code-dots"><div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div></div>
+      <span class="code-lang">TERMINAL — GitHub SSH Setup</span>
+    </div>
+    <pre><span class="c-comment"># 1. Public key copy කරලා GitHub ට add කරන්න</span>
+<span class="c-comment">#    GitHub → Settings → SSH and GPG Keys → New SSH Key</span>
+$ <span class="c-fn">cat</span> ~/.ssh/id_rsa.pub
+<span class="c-comment"># → ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQ... (paste in GitHub)</span>
+
+<span class="c-comment"># 2. Remote URL SSH ට change කිරීම</span>
+$ <span class="c-fn">git</span> remote set-url origin git@github.com:<span class="c-str">username/project.git</span>
+
+<span class="c-comment"># 3. SSH test</span>
+$ <span class="c-fn">ssh</span> -T git@github.com
+<span class="c-comment"># → Hi username! You've successfully authenticated.</span>
+
+<span class="c-comment"># 4. Push / Pull — now via SSH</span>
+$ <span class="c-fn">git</span> push origin main   <span class="c-comment"># Password type කරන්නේ නෑ!</span></pre>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot dot-ssh"></span> SSH Use කරන තැන්</div>
+    <div class="use-grid">
+      <div class="use-item"><span class="check" style="color:var(--ssh-color);">✓</span>AWS EC2 / VPS server access</div>
+      <div class="use-item"><span class="check" style="color:var(--ssh-color);">✓</span>GitHub code push / pull</div>
+      <div class="use-item"><span class="check" style="color:var(--ssh-color);">✓</span>Docker / Kubernetes deploy</div>
+      <div class="use-item"><span class="check" style="color:var(--ssh-color);">✓</span>Nginx / Apache configure</div>
+      <div class="use-item"><span class="check" style="color:var(--ssh-color);">✓</span>Linux server manage</div>
+      <div class="use-item"><span class="check" style="color:var(--ssh-color);">✓</span>Database backup / restore</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div id="panel-cmp" class="panel">
+<div class="container">
+
+  <div class="section-header">
+    <div class="section-icon" style="background: rgba(192,132,252,0.12); color: #c084fc; border: 1px solid rgba(192,132,252,0.3); font-family: var(--font-mono); font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 12px;">⚖</div>
+    <div>
+      <h2 style="color: #c084fc;">SSL vs SSH — සංසන්දනය</h2>
+      <p>Differences, similarities, සහ use cases side-by-side</p>
+    </div>
+  </div>
+
+  <div class="compare-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>ලක්ෂණය</th>
+          <th>🔒 SSL / TLS</th>
+          <th>🔑 SSH</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Full Name</td>
+          <td>Secure Sockets Layer / Transport Layer Security</td>
+          <td>Secure Shell</td>
+        </tr>
+        <tr>
+          <td>ප්‍රධාන අරමුණ</td>
+          <td>Browser ↔ Server data encrypt කිරීම</td>
+          <td>Remote server control & management</td>
+        </tr>
+        <tr>
+          <td>Port Number</td>
+          <td><span class="badge-port port-ssl">443</span></td>
+          <td><span class="badge-port port-ssh">22</span></td>
+        </tr>
+        <tr>
+          <td>Protocol</td>
+          <td>HTTPS (HTTP over TLS)</td>
+          <td>SSH protocol</td>
+        </tr>
+        <tr>
+          <td>User Interface</td>
+          <td>Browser padlock 🔒 icon</td>
+          <td>Terminal / Command Line</td>
+        </tr>
+        <tr>
+          <td>Use කරන්නේ</td>
+          <td>End-users, Web Apps, APIs</td>
+          <td>Developers, System Admins</td>
+        </tr>
+        <tr>
+          <td>Authentication</td>
+          <td>SSL Certificates (CA issued)</td>
+          <td>Password හෝ SSH Key Pair</td>
+        </tr>
+        <tr>
+          <td>Real-world Example</td>
+          <td>Bank login, online payment, hotel checkout</td>
+          <td>GitHub push, AWS deploy, Docker run</td>
+        </tr>
+        <tr>
+          <td>Analogy</td>
+          <td>යකඩ පෙට්ටියක දාලා data යැවීම 📦</td>
+          <td>රහස් underground tunnel 🚇</td>
+        </tr>
+        <tr>
+          <td>Encryption</td>
+          <td>Asymmetric + Symmetric (TLS handshake)</td>
+          <td>Asymmetric Key Pair (RSA/Ed25519)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="quick-grid">
+    <div class="quick-card quick-ssl">
+      <h4>🔒 SSL — කොහෙදැ Use කළ යුතු?</h4>
+      <ul>
+        <li>React / Vue frontend API calls</li>
+        <li>Spring Boot / Django REST API</li>
+        <li>Login සහ Registration pages</li>
+        <li>Payment / Checkout endpoints</li>
+        <li>Mobile app backend connections</li>
+        <li>Sinhala: "Data travel කරද්දී ආරක්ෂා"</li>
+      </ul>
+    </div>
+    <div class="quick-card quick-ssh">
+      <h4>🔑 SSH — කොහෙදැ Use කළ යුතු?</h4>
+      <ul>
+        <li>AWS EC2 / DigitalOcean VPS login</li>
+        <li>GitHub / GitLab code push &amp; pull</li>
+        <li>Docker image deploy &amp; manage</li>
+        <li>Nginx / Apache web server config</li>
+        <li>Database backup &amp; maintenance</li>
+        <li>Sinhala: "Server ට connect වෙලා control"</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card" style="border-color: rgba(192,132,252,0.2); margin-top: 24px;">
+    <div class="card-title"><span class="dot dot-purple"></span> දෙකෙම සමාන දේ</div>
+    <p>
+      SSL සහ SSH <strong>දෙකම encryption use කරනවා</strong> — නමුත් <strong>අරමුණ සහ context සම්පූර්ණයෙන්ම වෙනස්</strong>. 
+      SSL කියන්නේ end-user ගේ browser request ආරක්ෂා කිරීම. SSH කියන්නේ developer / admin 
+      ගේ server management ආරක්ෂා කිරීම. Real project එකක <strong>දෙකම</strong> use කරනවා — 
+      HTTPS API calls (SSL) + server deploy (SSH).
+    </p>
+  </div>
+
+</div>
+</div>
+
+<footer>
+  SSL / SSH Security Guide — Software Engineering · Sinhala · 2026
+</footer>
+
+<script>
+  function show(name, btn, activeClass) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => {
+      b.classList.remove('active-ssl', 'active-ssh', 'active-cmp');
+      b.style.background = '';
+      b.style.color = '';
+    });
+    document.getElementById('panel-' + name).classList.add('active');
+    btn.classList.add(activeClass);
+  }
+</script>
+</body>
+</html>
